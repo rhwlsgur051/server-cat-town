@@ -9,11 +9,34 @@ datasource db {
   provider = "mysql"
 }
 
-// Example models
-// model User {
-//   id        Int      @id @default(autoincrement())
-//   email     String   @unique
-//   name      String?
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+model User {
+  userNo    Int      @id @default(autoincrement()) @map("user_no")
+  userId    String   @unique @map("user_id") @db.VarChar(50)
+  userEmail String   @unique @map("user_email") @db.VarChar(100)
+  userPwd   String   @map("user_pwd") @db.VarChar(255)
+  userName  String   @map("user_name") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 1:N 관계 - 한 사용자는 여러 고양이를 가질 수 있음
+  cats Cat[]
+
+  @@map("users")
+}
+
+model Cat {
+  catNo     Int      @id @default(autoincrement()) @map("cat_no")
+  catName   String   @map("cat_name") @db.VarChar(50)
+  catBirth  String   @map("cat_birth") @db.VarChar(10) // YYYY-MM-DD
+  catGender String   @map("cat_gender") @db.VarChar(10) // male | female
+  catBreed  String   @map("cat_breed") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 외래키 - 어떤 사용자의 고양이인지
+  userNo Int  @map("user_no")
+  user   User @relation(fields: [userNo], references: [userNo], onDelete: Cascade)
+
+  @@map("cats")
+  @@index([userNo])
+}
