@@ -20,6 +20,9 @@ model User {
 
   // 1:N 관계 - 한 사용자는 여러 고양이를 가질 수 있음
   cats Cat[]
+  
+  // 1:N 관계 - 한 사용자는 여러 피드를 작성할 수 있음
+  feeds Feed[]
 
   @@map("users")
 }
@@ -39,4 +42,21 @@ model Cat {
 
   @@map("cats")
   @@index([userNo])
+}
+
+model Feed {
+  feedNo       Int      @id @default(autoincrement()) @map("feed_no")
+  feedContent  String   @map("feed_content") @db.Text // 글 내용
+  feedImageUrl String?  @map("feed_image_url") @db.VarChar(500) // 이미지 URL (선택)
+  feedLikes    Int      @default(0) @map("feed_likes") // 좋아요 수
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // 외래키 - 어떤 사용자가 작성한 피드인지 (1:N)
+  userNo Int  @map("user_no")
+  user   User @relation(fields: [userNo], references: [userNo], onDelete: Cascade)
+
+  @@map("feeds")
+  @@index([userNo])
+  @@index([createdAt]) // 최신순 정렬을 위한 인덱스
 }

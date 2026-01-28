@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JoinDto } from './dto/join.dto';
 import { LoginDto } from './dto/login.dto';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../common/constants/error-messages';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -21,7 +22,7 @@ export class AuthService {
     });
 
     if (existingEmail) {
-      throw new ConflictException('이미 사용 중인 이메일입니다.');
+      throw new ConflictException(ERROR_MESSAGES.AUTH.EMAIL_ALREADY_EXISTS);
     }
 
     // 아이디 중복 확인
@@ -30,7 +31,7 @@ export class AuthService {
     });
 
     if (existingUserId) {
-      throw new ConflictException('이미 사용 중인 아이디입니다.');
+      throw new ConflictException(ERROR_MESSAGES.AUTH.USER_ID_ALREADY_EXISTS);
     }
 
     // 비밀번호 해시화
@@ -56,7 +57,7 @@ export class AuthService {
     });
 
     return {
-      message: '회원가입이 완료되었습니다.',
+      message: SUCCESS_MESSAGES.AUTH.JOIN_SUCCESS,
       user,
     };
   }
@@ -68,14 +69,14 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('아이디 또는 비밀번호가 일치하지 않습니다.');
+      throw new UnauthorizedException(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
     }
 
     // 비밀번호 확인
     const isPasswordValid = await bcrypt.compare(loginDto.userPwd, user.userPwd);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('아이디 또는 비밀번호가 일치하지 않습니다.');
+      throw new UnauthorizedException(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
     }
 
     // JWT 토큰 생성
@@ -83,6 +84,7 @@ export class AuthService {
 
     // 로그인 성공
     return {
+      message: SUCCESS_MESSAGES.AUTH.LOGIN_SUCCESS,
       user: {
         userNo: user.userNo,
         userId: user.userId,

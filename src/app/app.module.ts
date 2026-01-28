@@ -7,6 +7,7 @@ import { PrismaModule } from 'prisma/prisma.module';
 import { UserModule } from '../user/user.module';
 import { CatModule } from '../cat/cat.module';
 import { AuthModule } from '../auth/auth.module';
+import { FeedModule } from '../feed/feed.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
     UserModule,
     CatModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
