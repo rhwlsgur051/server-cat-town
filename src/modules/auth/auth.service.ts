@@ -1,10 +1,10 @@
 import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { JoinDto } from './dto/join.dto';
 import { LoginDto } from './dto/login.dto';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../common/constants/error-messages';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../common/constants/error-messages';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

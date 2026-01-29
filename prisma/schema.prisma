@@ -23,6 +23,9 @@ model User {
   
   // 1:N 관계 - 한 사용자는 여러 피드를 작성할 수 있음
   feeds Feed[]
+  
+  // 1:N 관계 - 한 사용자는 여러 좋아요를 누를 수 있음
+  feedLikes FeedLike[]
 
   @@map("users")
 }
@@ -47,16 +50,37 @@ model Cat {
 model Feed {
   feedNo       Int      @id @default(autoincrement()) @map("feed_no")
   feedContent  String   @map("feed_content") @db.Text // 글 내용
-  feedImageUrl String?  @map("feed_image_url") @db.VarChar(500) // 이미지 URL (선택)
-  feedLikes    Int      @default(0) @map("feed_likes") // 좋아요 수
+  feedImageUrl String   @map("feed_image_url") @db.VarChar(500) // 이미지 URL (필수)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // 외래키 - 어떤 사용자가 작성한 피드인지 (1:N)
   userNo Int  @map("user_no")
   user   User @relation(fields: [userNo], references: [userNo], onDelete: Cascade)
+  
+  // 1:N 관계 - 한 피드는 여러 좋아요를 받을 수 있음
+  likes FeedLike[]
 
   @@map("feeds")
   @@index([userNo])
   @@index([createdAt]) // 최신순 정렬을 위한 인덱스
+}
+
+// 피드 좋아요 관계 테이블 (중간 테이블)
+model FeedLike {
+  feedLikeNo Int      @id @default(autoincrement()) @map("feed_like_no")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 외래키 - 어떤 피드에 대한 좋아요인지
+  feedNo Int  @map("feed_no")
+  feed   Feed @relation(fields: [feedNo], references: [feedNo], onDelete: Cascade)
+
+  // 외래키 - 누가 좋아요를 눌렀는지
+  userNo Int  @map("user_no")
+  user   User @relation(fields: [userNo], references: [userNo], onDelete: Cascade)
+
+  @@unique([feedNo, userNo]) // 한 사용자는 같은 피드에 한 번만 좋아요 가능
+  @@map("feed_likes")
+  @@index([feedNo])
+  @@index([userNo])
 }
