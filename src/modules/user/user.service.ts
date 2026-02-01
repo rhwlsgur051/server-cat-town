@@ -3,10 +3,12 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { supabaseUpload, supabaseDelete } from '../../util/supabase/supabase.upload';
+import { Multer } from 'multer';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createUserDto: CreateUserDto) {
     // 비밀번호 해시화
@@ -24,21 +26,22 @@ export class UserService {
         // 고양이가 있으면 함께 생성
         ...(cats &&
           cats.length > 0 && {
-            cats: {
-              create: cats.map((cat) => ({
-                catName: cat.catName,
-                catBirth: cat.catBirth,
-                catGender: cat.catGender,
-                catBreed: cat.catBreed,
-              })),
-            },
-          }),
+          cats: {
+            create: cats.map((cat) => ({
+              catName: cat.catName,
+              catBirth: cat.catBirth,
+              catGender: cat.catGender,
+              catBreed: cat.catBreed,
+            })),
+          },
+        }),
       },
       select: {
         userNo: true,
         userId: true,
         userEmail: true,
         userName: true,
+        userAvatarUrl: true,
         createdAt: true,
         updatedAt: true,
         cats: true, // 생성된 고양이 정보도 반환
@@ -54,6 +57,7 @@ export class UserService {
         userId: true,
         userEmail: true,
         userName: true,
+        userAvatarUrl: true,
         createdAt: true,
         updatedAt: true,
         cats: true,
@@ -70,6 +74,7 @@ export class UserService {
         userId: true,
         userEmail: true,
         userName: true,
+        userAvatarUrl: true,
         createdAt: true,
         updatedAt: true,
         cats: true,
@@ -101,6 +106,7 @@ export class UserService {
         userId: true,
         userEmail: true,
         userName: true,
+        userAvatarUrl: true,
         createdAt: true,
         updatedAt: true,
         // userPwd 제외
@@ -113,6 +119,51 @@ export class UserService {
 
     return await this.prisma.user.delete({
       where: { userNo },
+    });
+  }
+
+  async uploadImage(userNo: number, file: Multer.File) {
+    // 사용자 존재 여부 확인 및 기존 이미지 정보 가져오기
+    const user = await this.prisma.user.findUnique({
+      where: { userNo },
+      select: { userNo: true, userAvatarUrl: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`사용자 번호 ${userNo}를 찾을 수 없습니다.`);
+    }
+
+    // 기존 이미지가 있으면 삭제
+    if (user.userAvatarUrl) {
+      try {
+        // URL에서 파일 경로 추출 (예: cat-avatar/uuid.jpg)
+        const urlParts = user.userAvatarUrl.split('/');
+        const fileName = urlParts.slice(-2).join('/'); // 마지막 2개 부분 (폴더/파일명)
+        await supabaseDelete(fileName, 'user-avatar');
+      } catch (error) {
+        console.error('기존 이미지 삭제 실패:', error);
+        // 삭제 실패해도 계속 진행
+      }
+    }
+
+    // 새 이미지 업로드 (cat-avatar 경로 사용)
+    const uploadResult = await supabaseUpload(file, 'user-avatar');
+
+    // DB 업데이트
+    return await this.prisma.user.update({
+      where: { userNo },
+      data: {
+        userAvatarUrl: uploadResult.url,
+      },
+      select: {
+        userNo: true,
+        userId: true,
+        userEmail: true,
+        userName: true,
+        userAvatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 }

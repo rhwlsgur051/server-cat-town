@@ -2,10 +2,12 @@ import { getSupabaseClient } from "./supabase.client";
 import { Multer } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 
-export const supabaseUpload = async (file: Multer.File) => {
+type UploadPath = 'cat-avatar' | 'user-avatar' | 'feed-images';
+
+export const supabaseUpload = async (file: Multer.File, path: UploadPath) => {
     const supabaseClient = getSupabaseClient();
     const fileExtension = file.originalname.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExtension}`;
+    const fileName = `${path}/${uuidv4()}.${fileExtension}`;
 
     const { error } = await supabaseClient.storage
         .from(process.env.SUPABASE_BUCKET!)
@@ -26,11 +28,19 @@ export const supabaseUpload = async (file: Multer.File) => {
     };
 };
 
-export const supabaseDelete = async (fileName: string) => {
+export const supabaseDelete = async (fileName: string, path: UploadPath) => {
     const supabaseClient = getSupabaseClient();
-    await supabaseClient.storage
-        .from('images')
-        .remove([fileName]);
+    
+    const fullPath = `${path}/${fileName}`;
+    
+    const { error } = await supabaseClient.storage
+        .from(process.env.SUPABASE_BUCKET!)
+        .remove([fullPath]);
+    
+    if (error) {
+        console.error('Supabase 파일 삭제 실패:', error);
+        throw error;
+    }
 }
 
 const MAX = 1 * 1024 * 1024 * 1024; // 1GB

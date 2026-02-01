@@ -66,6 +66,14 @@ export class AuthService {
     // 사용자 찾기
     const user = await this.prisma.user.findUnique({
       where: { userId: loginDto.userId },
+      select: {
+        userNo: true,
+        userId: true,
+        userEmail: true,
+        userName: true,
+        userPwd: true,
+        userAvatarUrl: true,
+      },
     });
 
     if (!user) {
@@ -90,6 +98,7 @@ export class AuthService {
         userId: user.userId,
         userEmail: user.userEmail,
         userName: user.userName,
+        userAvatarUrl: user.userAvatarUrl,
       },
       ...tokens,
     };

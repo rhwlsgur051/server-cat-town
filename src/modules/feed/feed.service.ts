@@ -12,7 +12,7 @@ import { Multer } from 'multer';
 
 @Injectable()
 export class FeedService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // 피드 작성
   async createFeed(
@@ -23,7 +23,7 @@ export class FeedService {
     // 이미지 파일 Supabase에 업로드 (필수)
     let imageUrl: string;
     try {
-      const uploadResult = await supabaseUpload(file);
+      const uploadResult = await supabaseUpload(file, 'feed-images');
       imageUrl = uploadResult.url;
     } catch (error) {
       throw new BadRequestException('이미지 업로드에 실패했습니다.');
@@ -79,6 +79,7 @@ export class FeedService {
               userNo: true,
               userId: true,
               userName: true,
+              userAvatarUrl: true,
             },
           },
           _count: {
@@ -94,20 +95,20 @@ export class FeedService {
     // 좋아요 여부 추가 (로그인한 사용자인 경우)
     const feedsWithLikes = userNo
       ? await Promise.all(
-          feeds.map(async (feed) => {
-            const isLiked = await this.isLiked(feed.feedNo, userNo);
-            return {
-              ...feed,
-              likeCount: feed._count.likes,
-              isLiked,
-            };
-          }),
-        )
+        feeds.map(async (feed) => {
+          const isLiked = await this.isLiked(feed.feedNo, userNo);
+          return {
+            ...feed,
+            likeCount: feed._count.likes,
+            isLiked,
+          };
+        }),
+      )
       : feeds.map((feed) => ({
-          ...feed,
-          likeCount: feed._count.likes,
-          isLiked: false,
-        }));
+        ...feed,
+        likeCount: feed._count.likes,
+        isLiked: false,
+      }));
 
     return {
       success: true,
@@ -182,7 +183,7 @@ export class FeedService {
       try {
         const oldFileName = feed.feedImageUrl.split('/').pop();
         if (oldFileName) {
-          await supabaseDelete(oldFileName);
+          await supabaseDelete(oldFileName, 'feed-images');
         }
       } catch (error) {
         console.error('기존 이미지 삭제 실패:', error);
@@ -192,7 +193,7 @@ export class FeedService {
     // 새 이미지 업로드 (필수)
     let imageUrl: string;
     try {
-      const uploadResult = await supabaseUpload(file);
+      const uploadResult = await supabaseUpload(file, 'feed-images');
       imageUrl = uploadResult.url;
     } catch (error) {
       throw new BadRequestException('이미지 업로드에 실패했습니다.');
@@ -254,7 +255,7 @@ export class FeedService {
       try {
         const fileName = feed.feedImageUrl.split('/').pop();
         if (fileName) {
-          await supabaseDelete(fileName);
+          await supabaseDelete(fileName, 'feed-images');
         }
       } catch (error) {
         // 이미지 삭제 실패해도 피드는 삭제

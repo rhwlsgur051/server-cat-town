@@ -99,8 +99,7 @@ export class FeedController {
     @Param('feedNo', ParseIntPipe) feedNo: number,
     @Request() req: any,
   ) {
-    // TODO: JWT에서 userNo 추출
-    const userNo = req.user?.userNo || 1; // 임시로 1번 사용자
+    const userNo = req.user.userNo;
     return this.feedService.deleteFeed(feedNo, userNo);
   }
 
