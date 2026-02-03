@@ -1,5 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JoinDto } from './dto/join.dto';
 import { LoginDto } from './dto/login.dto';
@@ -23,5 +23,25 @@ export class AuthController {
   @ApiResponse({ status: 401, description: '아이디 또는 비밀번호가 일치하지 않습니다.' })
   async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto);
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Access Token 갱신' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: {
+          type: 'string',
+          description: 'Refresh Token',
+        },
+      },
+      required: ['refreshToken'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Access Token이 갱신되었습니다.' })
+  @ApiResponse({ status: 401, description: 'Refresh Token이 유효하지 않습니다.' })
+  async refresh(@Body('refreshToken') refreshToken: string) {
+    return await this.authService.refresh(refreshToken);
   }
 }

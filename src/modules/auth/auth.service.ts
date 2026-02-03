@@ -104,6 +104,43 @@ export class AuthService {
     };
   }
 
+  // AccessToken 갱신
+  async refresh(refreshToken: string) {
+    try {
+      // RefreshToken 검증
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+
+      // RefreshToken에서 userNo 추출
+      const userNo = payload.sub;
+
+      // 사용자 정보 조회
+      const user = await this.prisma.user.findUnique({
+        where: { userNo },
+        select: {
+          userNo: true,
+          userId: true,
+        },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
+      }
+
+      // 새로운 AccessToken만 발급 (RefreshToken은 재사용)
+      const accessPayload = { sub: user.userNo, userId: user.userId };
+      const accessToken = await this.jwtService.signAsync(accessPayload);
+
+      return {
+        message: 'Access Token이 갱신되었습니다.',
+        accessToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Refresh Token이 유효하지 않습니다.');
+    }
+  }
+
   // AccessToken과 RefreshToken 생성
   private async generateTokens(userNo: number, userId: string) {
     // AccessToken: 짧은 유효기간 (1시간), 더 많은 정보 포함

@@ -10,12 +10,16 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Multer } from 'multer';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('사용자')
 @Controller('users')
@@ -51,11 +55,21 @@ export class UserController {
   }
 
   @Delete(':userNo')
-  @ApiOperation({ summary: '사용자 삭제' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '회원 탈퇴 (본인만 가능)' })
   @ApiParam({ name: 'userNo', description: '사용자 번호' })
-  @ApiResponse({ status: 200, description: '사용자가 삭제되었습니다.' })
+  @ApiResponse({ status: 200, description: '회원 탈퇴가 완료되었습니다.' })
+  @ApiResponse({ status: 403, description: '본인만 탈퇴할 수 있습니다.' })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없습니다.' })
-  remove(@Param('userNo', ParseIntPipe) userNo: number) {
+  remove(
+    @Param('userNo', ParseIntPipe) userNo: number,
+    @Request() req: any,
+  ) {
+    // JWT에서 추출한 사용자 번호와 파라미터의 userNo가 일치하는지 확인
+    if (req.user.userNo !== userNo) {
+      throw new ForbiddenException('본인만 탈퇴할 수 있습니다.');
+    }
     return this.userService.remove(userNo);
   }
 

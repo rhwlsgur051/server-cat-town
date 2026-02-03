@@ -115,11 +115,57 @@ export class UserService {
   }
 
   async remove(userNo: number) {
-    await this.findOne(userNo); // 존재 여부 확인
+    // 사용자 존재 여부 및 아바타 정보 확인
+    const user = await this.prisma.user.findUnique({
+      where: { userNo },
+      select: { userNo: true, userAvatarUrl: true },
+    });
 
-    return await this.prisma.user.delete({
+    if (!user) {
+      throw new NotFoundException(`사용자 번호 ${userNo}를 찾을 수 없습니다.`);
+    }
+
+    // 사용자의 아바타 이미지가 있으면 삭제
+    if (user.userAvatarUrl) {
+      try {
+        const urlParts = user.userAvatarUrl.split('/');
+        const fileName = urlParts.slice(-2).join('/');
+        await supabaseDelete(fileName, 'user-avatar');
+      } catch (error) {
+        console.error('사용자 아바타 삭제 실패:', error);
+        // 이미지 삭제 실패해도 계정은 삭제
+      }
+    }
+
+    // 사용자가 작성한 피드의 이미지들 삭제
+    const feeds = await this.prisma.feed.findMany({
+      where: { userNo },
+      select: { feedImageUrl: true },
+    });
+
+    for (const feed of feeds) {
+      if (feed.feedImageUrl) {
+        try {
+          const fileName = feed.feedImageUrl.split('/').pop();
+          if (fileName) {
+            await supabaseDelete(fileName, 'feed-images');
+          }
+        } catch (error) {
+          console.error('피드 이미지 삭제 실패:', error);
+          // 이미지 삭제 실패해도 계속 진행
+        }
+      }
+    }
+
+    // 사용자 삭제 (Cascade로 관련 데이터도 자동 삭제)
+    await this.prisma.user.delete({
       where: { userNo },
     });
+
+    return {
+      success: true,
+      message: '회원 탈퇴가 완료되었습니다.',
+    };
   }
 
   async uploadImage(userNo: number, file: Multer.File) {
