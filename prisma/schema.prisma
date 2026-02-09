@@ -15,6 +15,7 @@ model User {
   userEmail String   @unique @map("user_email") @db.VarChar(100)
   userPwd   String   @map("user_pwd") @db.VarChar(255)
   userName  String   @map("user_name") @db.VarChar(50)
+  userAvatarUrl String? @map("user_avatar_url") @db.VarChar(500)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -51,6 +52,7 @@ model Feed {
   feedNo       Int      @id @default(autoincrement()) @map("feed_no")
   feedContent  String   @map("feed_content") @db.Text // 글 내용
   feedImageUrl String   @map("feed_image_url") @db.VarChar(500) // 이미지 URL (필수)
+  feedType     String   @default("daily") @map("feed_type") @db.VarChar(20) // daily | health | question
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

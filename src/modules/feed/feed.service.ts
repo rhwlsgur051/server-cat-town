@@ -33,6 +33,7 @@ export class FeedService {
       data: {
         feedContent: createFeedDto.feedContent,
         feedImageUrl: imageUrl,
+        feedType: createFeedDto.feedType,
         userNo,
       },
       include: {
@@ -41,6 +42,7 @@ export class FeedService {
             userNo: true,
             userId: true,
             userName: true,
+            userAvatarUrl: true,
           },
         },
         _count: {
@@ -130,6 +132,7 @@ export class FeedService {
             userNo: true,
             userId: true,
             userName: true,
+            userAvatarUrl: true,
           },
         },
         _count: {
@@ -199,18 +202,22 @@ export class FeedService {
       throw new BadRequestException('이미지 업로드에 실패했습니다.');
     }
 
+    const updateData: { feedContent?: string; feedImageUrl: string; feedType?: string } = {
+      feedImageUrl: imageUrl,
+    };
+    if (updateFeedDto.feedContent !== undefined) updateData.feedContent = updateFeedDto.feedContent;
+    if (updateFeedDto.feedType !== undefined) updateData.feedType = updateFeedDto.feedType;
+
     const updatedFeed = await this.prisma.feed.update({
       where: { feedNo },
-      data: {
-        feedContent: updateFeedDto.feedContent,
-        feedImageUrl: imageUrl,
-      },
+      data: updateData,
       include: {
         user: {
           select: {
             userNo: true,
             userId: true,
             userName: true,
+            userAvatarUrl: true,
           },
         },
         _count: {

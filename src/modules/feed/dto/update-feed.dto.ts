@@ -1,4 +1,5 @@
-import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsIn } from 'class-validator';
+import { FEED_TYPES } from './create-feed.dto';
 
 export class UpdateFeedDto {
   @IsOptional()
@@ -11,4 +12,9 @@ export class UpdateFeedDto {
   @IsString()
   @MaxLength(500)
   feedImageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(FEED_TYPES, { message: 'feedType은 daily, health, question 중 하나여야 합니다.' })
+  feedType: string;
 }

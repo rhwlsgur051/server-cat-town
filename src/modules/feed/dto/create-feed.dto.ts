@@ -1,4 +1,7 @@
-import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsIn } from 'class-validator';
+
+export const FEED_TYPES = ['daily', 'health', 'question'] as const;
+export type FeedType = (typeof FEED_TYPES)[number];
 
 export class CreateFeedDto {
   @IsString()
@@ -10,4 +13,8 @@ export class CreateFeedDto {
   @IsString()
   @MaxLength(500)
   feedImageUrl?: string;
+
+  @IsString()
+  @IsIn(FEED_TYPES, { message: 'feedType은 daily, health, question 중 하나여야 합니다.' })
+  feedType: FeedType;
 }
