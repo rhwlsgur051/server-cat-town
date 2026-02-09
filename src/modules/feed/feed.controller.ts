@@ -19,6 +19,7 @@ import { FeedService } from './feed.service';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtOptionalAuthGuard } from '../auth/jwt-optional-auth.guard';
 import { Multer } from 'multer'; // Multer 타입 가져오기
 
 @Controller('feeds')
@@ -41,14 +42,15 @@ export class FeedController {
     return this.feedService.createFeed(userNo, createFeedDto, file);
   }
 
-  // 피드 목록 조회 (공개, 로그인 시 좋아요 여부 포함)
+  // 피드 목록 조회 (공개, 로그인 시 좋아요 여부 isLiked 포함)
   @Get()
+  @UseGuards(JwtOptionalAuthGuard)
   async getFeeds(
     @Request() req: any,
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 10,
   ) {
-    const userNo = req.user?.userNo; // 로그인한 사용자면 userNo 전달
+    const userNo = req.user?.userNo;
     return this.feedService.getFeeds(page, limit, userNo);
   }
 
@@ -67,11 +69,12 @@ export class FeedController {
 
   // 특정 피드 조회 (공개, 로그인 시 좋아요 여부 포함)
   @Get(':feedNo')
+  @UseGuards(JwtOptionalAuthGuard)
   async getFeed(
     @Request() req: any,
     @Param('feedNo', ParseIntPipe) feedNo: number,
   ) {
-    const userNo = req.user?.userNo; // 로그인한 사용자면 userNo 전달
+    const userNo = req.user?.userNo;
     return this.feedService.getFeed(feedNo, userNo);
   }
 
