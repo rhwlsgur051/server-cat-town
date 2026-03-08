@@ -119,6 +119,7 @@ export class FeedService {
       total,
       page,
       limit,
+      hasMore: skip + feedsWithLikes.length < total,
     };
   }
 
