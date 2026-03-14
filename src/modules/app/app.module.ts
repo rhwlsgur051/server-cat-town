@@ -8,6 +8,7 @@ import { UserModule } from '../user/user.module';
 import { CatModule } from '../cat/cat.module';
 import { AuthModule } from '../auth/auth.module';
 import { FeedModule } from '../feed/feed.module';
+import { GeminiModule } from '../gemini/gemini.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FeedModule } from '../feed/feed.module';
     UserModule,
     CatModule,
     FeedModule,
+    GeminiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
